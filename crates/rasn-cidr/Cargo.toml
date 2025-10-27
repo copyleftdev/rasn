@@ -6,7 +6,11 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "RASN rasn-cidr crate"
+description = "CIDR operations and IP range queries"
 
 [dependencies]
 rasn-core = { path = "../rasn-core" }
+thiserror.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
