@@ -1,0 +1,16 @@
+   Compiling rasn-arrow v0.1.0 (/home/sigma/Projects/rasn/crates/rasn-arrow)
+    Finished `bench` profile [optimized] target(s) in 18.29s
+     Running unittests src/lib.rs (target/release/deps/rasn_arrow-fb1577cf5c65288b)
+
+running 2 tests
+test tests::test_binary_search_basic ... [33mignored(B[m
+test tests::test_table_properties ... [33mignored(B[m
+
+test result: [32mok(B[m. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running benches/arrow_lookup.rs (target/release/deps/arrow_lookup-4dfea921f2f9d7d5)
+
+thread 'main' panicked at crates/rasn-arrow/benches/arrow_lookup.rs:14:55:
+Failed to load test data: InvalidSchema("Expected dictionary column")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: bench failed, to rerun pass `-p rasn-arrow --bench arrow_lookup`

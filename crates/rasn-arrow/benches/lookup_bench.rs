@@ -3,14 +3,23 @@ use rasn_arrow::IpRangeTableV4;
 use std::path::Path;
 
 fn benchmark_lookup(c: &mut Criterion) {
-    // Only run if test file exists
-    let path = Path::new("data/arrow/ip2asn-v4.parquet");
-    if !path.exists() {
-        eprintln!("Skipping benchmark: test data not found");
-        return;
-    }
+    let paths = [
+        Path::new("data/arrow/ip2asn-v4.parquet"),
+        Path::new("../../data/arrow/ip2asn-v4.parquet"),
+    ];
 
-    let table = IpRangeTableV4::from_parquet(path).expect("Failed to load test data");
+    let table = paths
+        .iter()
+        .find(|p| p.exists())
+        .and_then(|p| IpRangeTableV4::from_parquet(p).ok());
+
+    let table = match table {
+        Some(t) => t,
+        None => {
+            eprintln!("Skipping benchmark: test data not found");
+            return;
+        }
+    };
 
     c.bench_function("arrow_ipv4_lookup", |b| {
         b.iter(|| {

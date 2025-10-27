@@ -3,8 +3,19 @@ use rasn_arrow::IpRangeTableV4;
 use std::path::Path;
 
 fn load_table() -> IpRangeTableV4 {
-    let path = Path::new("data/arrow/ip2asn-v4.parquet");
-    IpRangeTableV4::from_parquet(path).expect("Failed to load test data")
+    let paths = [
+        Path::new("data/arrow/ip2asn-v4.parquet"),
+        Path::new("../../data/arrow/ip2asn-v4.parquet"),
+        Path::new("../../../data/arrow/ip2asn-v4.parquet"),
+    ];
+
+    for path in &paths {
+        if path.exists() {
+            return IpRangeTableV4::from_parquet(path).expect("Failed to load test data");
+        }
+    }
+
+    panic!("Could not find test data in any expected location");
 }
 
 fn bench_single_lookup(c: &mut Criterion) {

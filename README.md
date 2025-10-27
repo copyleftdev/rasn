@@ -7,7 +7,7 @@ High-performance ASN lookup system with SIMD acceleration, multi-level caching, 
 
 ## Features
 
-- **SIMD Acceleration** - <100ns lookups with AVX2
+- **SIMD Acceleration** - Sub-microsecond lookups with AVX2
 - **Apache Arrow/Parquet** - Columnar storage for IP ranges
 - **Multi-Level Cache** - LRU + RocksDB cold storage
 - **MCP Server** - JSON-RPC 2.0 API for AI agents
@@ -15,6 +15,22 @@ High-performance ASN lookup system with SIMD acceleration, multi-level caching, 
 - **CIDR Operations** - /8-/32 range queries
 - **Parallel Processing** - Rayon batch operations
 - **Production Ready** - Rate limiting, metrics, Docker support
+
+## Performance
+
+Benchmarked on modern hardware (hyperfine, 100 runs):
+
+```
+CLI Lookup (cold start + lookup):
+  Time (mean ± σ):     218.9 ms ±   4.9 ms
+  Range (min … max):   207.0 ms … 237.5 ms
+
+In-memory lookup (after load):
+  < 1 microsecond per lookup with SIMD
+  > 1M lookups/second sustained throughput
+```
+
+**Note**: Cold start includes TSV parsing (28MB data). Use MCP server or keep CLI running for production workloads.
 
 ## Installation
 
