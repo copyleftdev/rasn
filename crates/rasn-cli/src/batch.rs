@@ -18,24 +18,28 @@ use rasn_core::AsnInfo;
 use rasn_resolver::DnsResolver;
 
 /// Number of CPU cores available
+#[allow(dead_code)]
 fn num_cpus_get() -> usize {
     num_cpus::get()
 }
 
 /// Batch processing result
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct BatchResult {
     pub input: String,
     pub result: Result<AsnInfo, String>,
 }
 
 /// Batch processor with parallel execution
+#[allow(dead_code)]
 pub struct BatchProcessor {
     arrow_table: Option<Arc<IpRangeTableV4>>,
     dns_resolver: Option<Arc<DnsResolver>>,
     thread_pool: rayon::ThreadPool,
 }
 
+#[allow(dead_code)]
 impl BatchProcessor {
     /// Create a new batch processor
     ///
@@ -45,7 +49,7 @@ impl BatchProcessor {
     /// * `num_threads` - Number of threads (default: CPU cores * 2)
     pub fn new(arrow_path: Option<&Path>, num_threads: Option<usize>) -> Result<Self> {
         let num_threads = num_threads.unwrap_or_else(|| num_cpus_get() * 2);
-        
+
         let thread_pool = rayon::ThreadPoolBuilder::new()
             .num_threads(num_threads)
             .build()?;
@@ -78,14 +82,15 @@ impl BatchProcessor {
             ips.into_par_iter()
                 .map(|ip| {
                     let result = self.lookup_ip(ip);
-                    
+
                     let count = processed.fetch_add(1, Ordering::Relaxed) + 1;
                     if count % 1000 == 0 || count == total {
                         eprintln!("Processed {}/{} IPs", count, total);
                     }
 
                     BatchResult {
-                        input: format!("{}.{}.{}.{}", 
+                        input: format!(
+                            "{}.{}.{}.{}",
                             (ip >> 24) & 0xFF,
                             (ip >> 16) & 0xFF,
                             (ip >> 8) & 0xFF,
@@ -109,10 +114,11 @@ impl BatchProcessor {
         let resolver = self.dns_resolver.as_ref().map(|r| r.as_ref());
 
         self.thread_pool.install(|| {
-            domains.into_par_iter()
+            domains
+                .into_par_iter()
                 .map(|domain| {
                     let result = self.lookup_domain(&domain, resolver);
-                    
+
                     let count = processed.fetch_add(1, Ordering::Relaxed) + 1;
                     if count % 100 == 0 || count == total {
                         eprintln!("Processed {}/{} domains", count, total);
@@ -132,25 +138,29 @@ impl BatchProcessor {
         if let Some(ref table) = self.arrow_table {
             table
                 .find_ip(ip)
-                .ok_or_else(|| format!("No ASN found for IP"))
+                .ok_or_else(|| "No ASN found for IP".to_string())
         } else {
             Err("Arrow table not loaded".to_string())
         }
     }
 
     /// Lookup domain (resolve DNS then lookup IP)
-    fn lookup_domain(&self, domain: &str, resolver: Option<&DnsResolver>) -> Result<AsnInfo, String> {
+    fn lookup_domain(
+        &self,
+        domain: &str,
+        resolver: Option<&DnsResolver>,
+    ) -> Result<AsnInfo, String> {
         let resolver = resolver.ok_or_else(|| "DNS resolver not available".to_string())?;
-        
+
         // Synchronous DNS resolution (blocking in thread pool)
         let rt = tokio::runtime::Runtime::new()
             .map_err(|e| format!("Failed to create runtime: {}", e))?;
-        
-        let ips = rt.block_on(resolver.resolve(domain))
+
+        let ips = rt
+            .block_on(resolver.resolve(domain))
             .map_err(|e| format!("DNS resolution failed: {}", e))?;
 
-        let ip = ips.first()
-            .ok_or_else(|| "No IPs returned".to_string())?;
+        let ip = ips.first().ok_or_else(|| "No IPs returned".to_string())?;
 
         // Convert IpAddr to u32 (IPv4 only for now)
         let ip_u32 = match ip {
