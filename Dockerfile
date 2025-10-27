@@ -11,8 +11,7 @@ RUN apk add --no-cache musl-dev
 WORKDIR /app
 
 # Copy manifests
-COPY Cargo.toml ./
-COPY Cargo.lock* ./
+COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 
 # Build release binary
