@@ -41,8 +41,8 @@
 //! # }
 //! ```
 
-use rasn_core::{Asn, AsnInfo};
-use rocksdb::{ColumnFamily, Options, DB};
+use rasn_core::AsnInfo;
+use rocksdb::{BlockBasedOptions, Options, DB};
 use std::path::Path;
 use std::sync::Arc;
 use thiserror::Error;
@@ -112,22 +112,20 @@ impl ColdStorage {
         let mut opts = Options::default();
         opts.create_if_missing(true);
         opts.create_missing_column_families(true);
-        
+
         // Configure compression
         opts.set_compression_type(rocksdb::DBCompressionType::Lz4);
-        
+
         // Configure block cache (256MB)
-        opts.set_block_cache_size(256 * 1024 * 1024);
-        
+        let mut block_opts = BlockBasedOptions::default();
+        block_opts.set_block_cache(&rocksdb::Cache::new_lru_cache(256 * 1024 * 1024));
+        opts.set_block_based_table_factory(&block_opts);
+
         // Batch writes for better performance
         opts.set_write_buffer_size(64 * 1024 * 1024);
-        
+
         // Open with column families
-        let db = DB::open_cf(
-            &opts,
-            path,
-            vec![CF_IP_RANGES, CF_ASN_METADATA, CF_INDEXES],
-        )?;
+        let db = DB::open_cf(&opts, path, vec![CF_IP_RANGES, CF_ASN_METADATA, CF_INDEXES])?;
 
         Ok(Self { db: Arc::new(db) })
     }
@@ -141,7 +139,7 @@ impl ColdStorage {
         let cf = self.get_cf(CF_ASN_METADATA)?;
         let key = info.asn.0.to_be_bytes();
         let value = serde_json::to_vec(info)?;
-        
+
         self.db.put_cf(&cf, key, value)?;
         Ok(())
     }
@@ -154,7 +152,7 @@ impl ColdStorage {
     pub fn get_asn_info(&self, asn: u32) -> Result<Option<AsnInfo>> {
         let cf = self.get_cf(CF_ASN_METADATA)?;
         let key = asn.to_be_bytes();
-        
+
         match self.db.get_cf(&cf, key)? {
             Some(bytes) => {
                 let info = serde_json::from_slice(&bytes)?;
@@ -173,15 +171,15 @@ impl ColdStorage {
     /// * `asn` - ASN number for this range
     pub fn put_ip_range(&self, start_ip: u32, end_ip: u32, asn: u32) -> Result<()> {
         let cf = self.get_cf(CF_IP_RANGES)?;
-        
+
         // Key: start_ip (big-endian for proper sorting)
         let key = start_ip.to_be_bytes();
-        
+
         // Value: [end_ip, asn]
         let mut value = Vec::with_capacity(8);
         value.extend_from_slice(&end_ip.to_be_bytes());
         value.extend_from_slice(&asn.to_be_bytes());
-        
+
         self.db.put_cf(&cf, key, value)?;
         Ok(())
     }
@@ -194,22 +192,22 @@ impl ColdStorage {
     pub fn find_ip(&self, ip: u32) -> Result<Option<u32>> {
         let cf = self.get_cf(CF_IP_RANGES)?;
         let search_key = ip.to_be_bytes();
-        
+
         // Use iterator to find range containing IP
         let mut iter = self.db.raw_iterator_cf(&cf);
         iter.seek_for_prev(&search_key);
-        
+
         while iter.valid() {
             if let (Some(key), Some(value)) = (iter.key(), iter.value()) {
                 if key.len() == 4 && value.len() == 8 {
                     let start_ip = u32::from_be_bytes(key.try_into().unwrap());
                     let end_ip = u32::from_be_bytes(value[0..4].try_into().unwrap());
                     let asn = u32::from_be_bytes(value[4..8].try_into().unwrap());
-                    
+
                     if ip >= start_ip && ip <= end_ip {
                         return Ok(Some(asn));
                     }
-                    
+
                     // If IP is before this range, no match
                     if ip < start_ip {
                         return Ok(None);
@@ -218,7 +216,7 @@ impl ColdStorage {
             }
             iter.prev();
         }
-        
+
         Ok(None)
     }
 
@@ -236,7 +234,7 @@ impl ColdStorage {
     }
 
     /// Get column family handle
-    fn get_cf(&self, name: &str) -> Result<Arc<ColumnFamily>> {
+    fn get_cf(&self, name: &str) -> Result<&rocksdb::ColumnFamily> {
         self.db
             .cf_handle(name)
             .ok_or_else(|| StorageError::DatabaseError(format!("Column family {} not found", name)))
@@ -275,7 +273,7 @@ mod tests {
 
         let retrieved = storage.get_asn_info(15169).unwrap();
         assert!(retrieved.is_some());
-        
+
         let retrieved = retrieved.unwrap();
         assert_eq!(retrieved.asn.0, 15169);
         assert_eq!(retrieved.organization, "Google");
