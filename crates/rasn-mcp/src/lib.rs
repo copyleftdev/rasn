@@ -191,7 +191,13 @@ impl McpServer {
         let cache =
             Arc::new(CacheLayer::new(10000).map_err(|e| McpError::InternalError(e.to_string()))?);
 
-        Ok(Self { arrow_table, cache })
+        let resolver = DnsResolver::new().ok().map(Arc::new);
+
+        Ok(Self {
+            arrow_table,
+            cache,
+            resolver,
+        })
     }
 
     /// Handle a JSON-RPC 2.0 request
