@@ -23,11 +23,7 @@ reference_data/*.csv
 reference_data/*.gz
 reference_data/*.mmdb
 
-# Generated Databases (build locally)
-data/arrow/*.parquet
-reference_data/*.tsv
-reference_data/*.csv
-data/cache/
+# Note: data/arrow/*.parquet files are COMMITTED to git
 
 # Python
 __pycache__/
