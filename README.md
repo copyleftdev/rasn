@@ -100,7 +100,7 @@ Add to Claude Desktop config (`~/Library/Application Support/Claude/claude_deskt
 - `reverse_lookup` - PTR records
 - `enrich_data` - WHOIS + GeoIP
 
-### Docker
+### Docker Usage
 
 ```bash
 # Build image
