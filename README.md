@@ -1,9 +1,15 @@
-# RASN - Rust ASN Mapper
+<div align="center">
+  <img src="data/media/logo.png" alt="RASN Logo" width="200"/>
+  
+  # RASN - Rust ASN Mapper
 
-[![CI](https://github.com/copyleftdev/rasn/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/rasn/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+  [![CI](https://github.com/copyleftdev/rasn/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/rasn/actions/workflows/ci.yml)
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+</div>
 
-High-performance ASN lookup system with SIMD acceleration, multi-level caching, and MCP server for AI agents.
+<p align="center">
+  High-performance ASN lookup system with SIMD acceleration, multi-level caching, and MCP server for AI agents.
+</p>
 
 ## Features
 
