@@ -5,18 +5,18 @@
 //! - [`AsnInfo`] - Complete ASN information
 //! - [`RasnError`] - Error types
 //!
-//! # Examples
 //!
 //! ```
 //! use rasn_core::{Asn, AsnInfo};
 //!
 //! let asn = Asn(15169);
-//! assert_eq!(asn.0, 15169);
 //! ```
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
+
+pub mod security;
 
 /// Autonomous System Number (ASN)
 ///
