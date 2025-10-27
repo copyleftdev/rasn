@@ -35,6 +35,7 @@
 
 use rasn_arrow::IpRangeTableV4;
 use rasn_cache::CacheLayer;
+use rasn_core::AsnInfo;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
