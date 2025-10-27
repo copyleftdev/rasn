@@ -35,7 +35,6 @@
 
 use rasn_arrow::IpRangeTableV4;
 use rasn_cache::CacheLayer;
-use rasn_core::AsnInfo;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
@@ -231,14 +230,14 @@ impl McpServer {
 
         // Check cache first
         if let Some(cached) = self.cache.get(&params.ip).await {
-            return Ok(serde_json::to_value(&cached)
-                .map_err(|e| McpError::InternalError(e.to_string()))?);
+            return serde_json::to_value(&cached)
+                .map_err(|e| McpError::InternalError(e.to_string()));
         }
 
         // Parse IP to u32
         let ip_u32 = self
             .parse_ip(&params.ip)
-            .map_err(|e| McpError::InvalidRequest(e))?;
+            .map_err(McpError::InvalidRequest)?;
 
         // Lookup in Arrow table
         if let Some(ref table) = self.arrow_table {
@@ -248,8 +247,8 @@ impl McpServer {
                     .set(&params.ip, info.clone(), Duration::from_secs(300))
                     .await;
 
-                return Ok(serde_json::to_value(&info)
-                    .map_err(|e| McpError::InternalError(e.to_string()))?);
+                return serde_json::to_value(&info)
+                    .map_err(|e| McpError::InternalError(e.to_string()));
             }
         }
 
