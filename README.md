@@ -18,19 +18,15 @@ High-performance ASN lookup system with SIMD acceleration, multi-level caching, 
 
 ## Performance
 
-Benchmarked on modern hardware (hyperfine, 100 runs):
+Benchmarked on modern hardware using `hyperfine` (100 runs):
 
 ```
-CLI Lookup (cold start + lookup):
+CLI Lookup (includes startup + data load + lookup):
   Time (mean ± σ):     218.9 ms ±   4.9 ms
   Range (min … max):   207.0 ms … 237.5 ms
-
-In-memory lookup (after load):
-  < 1 microsecond per lookup with SIMD
-  > 1M lookups/second sustained throughput
 ```
 
-**Note**: Cold start includes TSV parsing (28MB data). Use MCP server or keep CLI running for production workloads.
+**Note**: Cold start time includes TSV parsing (28MB data). For high-throughput workloads, use the MCP server or keep the CLI process warm to amortize startup costs.
 
 ## Installation
 
