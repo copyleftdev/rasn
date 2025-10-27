@@ -4,6 +4,7 @@ mod batch;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use serde::Serialize;
+use std::sync::Arc;
 
 /// High-performance ASN mapper with Apache Arrow columnar storage
 #[derive(Parser)]
@@ -120,6 +121,20 @@ fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Resul
     Ok(())
 }
 
+fn handle_bulk(args: BulkArgs, _format: OutputFormat, verbose: bool) -> Result<()> {
+    if verbose {
+        eprintln!("{} Bulk processing from: {}", "›".blue(), args.input);
+        if let Some(ref output) = args.output {
+            eprintln!("{} Writing to: {}", "›".blue(), output);
+        } else {
+            eprintln!("{} Writing to stdout", "›".blue());
+        }
+    }
+
+    println!("{}", "Bulk processing - Coming soon! (Phase 3.1)".yellow());
+    Ok(())
+}
+
 fn handle_batch(args: BatchArgs, _format: OutputFormat, verbose: bool) -> Result<()> {
     if verbose {
         eprintln!(
@@ -139,14 +154,32 @@ fn handle_batch(args: BatchArgs, _format: OutputFormat, verbose: bool) -> Result
 }
 
 fn handle_mcp(args: McpArgs, verbose: bool) -> Result<()> {
-    if verbose {
-        eprintln!("{} Starting MCP server: {:?}", "›".blue(), args.transport);
-        if matches!(args.transport, TransportMode::Http) {
-            eprintln!("{} Listening on port: {}", "›".blue(), args.port);
+    let server = rasn_mcp::McpServer::new(None)
+        .map_err(|e| anyhow::anyhow!("Failed to create MCP server: {}", e))?;
+    let server = std::sync::Arc::new(server);
+
+    match args.transport {
+        TransportMode::Stdio => {
+            if verbose {
+                eprintln!("{} Starting MCP server on STDIO", "›".blue());
+            }
+            let transport = rasn_mcp::transport::StdioTransport::new(server);
+            transport
+                .run_blocking()
+                .map_err(|e| anyhow::anyhow!("STDIO transport error: {}", e))?;
+        }
+        TransportMode::Http => {
+            if verbose {
+                eprintln!(
+                    "{} Starting MCP server on HTTP port {}",
+                    "›".blue(),
+                    args.port
+                );
+            }
+            println!("{}", "HTTP transport - Coming soon!".yellow());
         }
     }
 
-    println!("{}", "MCP server - Coming soon! (Phase 5)".yellow());
     Ok(())
 }
 
