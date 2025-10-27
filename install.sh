@@ -2,9 +2,9 @@
 set -e
 
 # RASN Installation Script
-# Installs binary and data files
+# Installs binary and data files to user's home directory
 
-PREFIX="${PREFIX:-/usr/local}"
+PREFIX="${PREFIX:-$HOME/.local}"
 BINDIR="$PREFIX/bin"
 DATADIR="$PREFIX/share/rasn"
 
@@ -67,13 +67,17 @@ echo "==================================="
 echo "✓ Installation complete!"
 echo "==================================="
 echo ""
+echo "Binary installed to: $BINDIR/rasn"
+echo "Data installed to:   $DATADIR"
+echo ""
 echo "Add to your shell profile (~/.bashrc or ~/.zshrc):"
-echo "  export RASN_DATA_DIR=$DATADIR"
+echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+echo "  export RASN_DATA_DIR=\"\$HOME/.local/share/rasn\""
+echo ""
+echo "Then reload your shell:"
+echo "  source ~/.bashrc    # or source ~/.zshrc"
 echo ""
 echo "Test installation:"
 echo "  rasn --version"
 echo "  rasn lookup 8.8.8.8"
-echo ""
-echo "Note: ASN data may need to be downloaded separately."
-echo "Run: curl -L https://iptoasn.com/data/ip2asn-v4.tsv.gz | gunzip > $DATADIR/ip2asn-v4.tsv"
 echo ""

@@ -18,12 +18,12 @@ High-performance ASN lookup system with SIMD acceleration, multi-level caching, 
 
 ## Installation
 
-### Quick Install (with data)
+### Quick Install (with data - installs to ~/.local)
 
 ```bash
 git clone https://github.com/copyleftdev/rasn.git
 cd rasn
-./install.sh
+./install.sh    # No sudo required!
 # or: make install
 ```
 

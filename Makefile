@@ -1,6 +1,7 @@
 .PHONY: install uninstall data clean test help
 
-PREFIX ?= /usr/local
+# Default to user's home directory (no sudo required)
+PREFIX ?= $(HOME)/.local
 BINDIR = $(PREFIX)/bin
 DATADIR = $(PREFIX)/share/rasn
 
@@ -17,7 +18,10 @@ help:
 	@echo "  make clean         - Clean build artifacts"
 	@echo ""
 	@echo "Configuration:"
-	@echo "  PREFIX=$(PREFIX)   (default: /usr/local)"
+	@echo "  PREFIX=$(PREFIX)   (default: ~/.local)"
+	@echo ""
+	@echo "System-wide install:"
+	@echo "  sudo make install PREFIX=/usr/local"
 
 # Build the binary
 build:

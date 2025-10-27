@@ -3,20 +3,28 @@
 ## Quick Install
 
 ```bash
-# Using install script (recommended)
+# Using install script (recommended - installs to ~/.local)
 ./install.sh
 
 # Or using Makefile
 make install
 ```
 
+**Installs to your home directory** - no `sudo` required!
+
 ## What Gets Installed
 
-1. **Binary**: `/usr/local/bin/rasn`
-2. **Data files**: `/usr/local/share/rasn/`
+1. **Binary**: `~/.local/bin/rasn`
+2. **Data files**: `~/.local/share/rasn/`
    - ASN database (Arrow/Parquet)
    - Reference data
 3. **Config**: `~/.config/rasn/config.toml`
+
+### System-wide Install (optional)
+
+```bash
+sudo make install PREFIX=/usr/local
+```
 
 ## Manual Installation
 
@@ -105,11 +113,16 @@ Set the data directory:
 export RASN_DATA_DIR=/usr/local/share/rasn
 ```
 
-### Permission denied
+### Binary not found after install
 
-Install to user directory:
+Add `~/.local/bin` to your PATH:
+
 ```bash
-PREFIX=~/.local make install
+# Add to ~/.bashrc or ~/.zshrc
+export PATH="$HOME/.local/bin:$PATH"
+
+# Reload shell
+source ~/.bashrc
 ```
 
 ### Missing dependencies
