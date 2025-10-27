@@ -1,0 +1,13 @@
+[package]
+name = "rasn-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI for RASN"
+
+[dependencies]
+rasn-core = { path = "../rasn-core" }
+anyhow.workspace = true
