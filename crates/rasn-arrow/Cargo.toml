@@ -21,3 +21,7 @@ criterion = "0.5"
 [[bench]]
 name = "lookup_bench"
 harness = false
+
+[[bench]]
+name = "arrow_lookup"
+harness = false
