@@ -16,6 +16,8 @@ help:
 	@echo "  make data          - Download/prepare data files"
 	@echo "  make test          - Run tests"
 	@echo "  make clean         - Clean build artifacts"
+	@echo "  make dev-setup     - Setup development environment"
+	@echo "  make install-hooks - Install git pre-commit hooks"
 	@echo ""
 	@echo "Configuration:"
 	@echo "  PREFIX=$(PREFIX)   (default: ~/.local)"
@@ -100,6 +102,12 @@ clean:
 dev-setup:
 	@echo "Setting up development environment..."
 	@rustup component add rustfmt clippy
+	@./scripts/install-hooks.sh
 	@echo "✓ Development tools installed"
+	@echo "✓ Git hooks installed"
 	@echo ""
 	@echo "Run: make test"
+
+# Install git hooks
+install-hooks:
+	@./scripts/install-hooks.sh

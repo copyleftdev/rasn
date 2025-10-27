@@ -117,6 +117,15 @@ rasn auth status
 
 ## Development
 
+### Setup
+
+```bash
+# Install dev tools and git hooks
+make dev-setup
+```
+
+### Common Tasks
+
 ```bash
 # Run tests
 cargo test --all-features --workspace
@@ -129,6 +138,9 @@ cargo clippy --all-features --workspace -- -D warnings
 
 # Build docs
 cargo doc --all-features --no-deps --workspace
+
+# Run all checks (same as pre-commit)
+./hooks/pre-commit
 ```
 
 ## Project Structure
