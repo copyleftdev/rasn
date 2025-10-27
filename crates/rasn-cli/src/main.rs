@@ -30,6 +30,8 @@ enum Commands {
     Batch(BatchArgs),
     /// Start MCP server for AI agent integration
     Mcp(McpArgs),
+    /// Manage API authentication
+    Auth(AuthArgs),
 }
 
 #[derive(Parser)]
@@ -81,6 +83,20 @@ enum TransportMode {
     Http,
 }
 
+#[derive(Parser)]
+struct AuthArgs {
+    #[command(subcommand)]
+    command: AuthCommand,
+}
+
+#[derive(Subcommand)]
+enum AuthCommand {
+    /// Check authentication status
+    Status,
+    /// Display usage information
+    Info,
+}
+
 #[derive(Serialize)]
 struct LookupResult {
     target: String,
@@ -97,6 +113,7 @@ fn main() -> Result<()> {
         Commands::Lookup(args) => handle_lookup(args, cli.output, cli.verbose)?,
         Commands::Batch(args) => handle_batch(args, cli.output, cli.verbose)?,
         Commands::Mcp(args) => handle_mcp(args, cli.verbose)?,
+        Commands::Auth(args) => handle_auth(args, cli.verbose)?,
     }
 
     Ok(())
@@ -162,6 +179,41 @@ fn handle_mcp(args: McpArgs, verbose: bool) -> Result<()> {
                 );
             }
             println!("{}", "HTTP transport - Coming soon!".yellow());
+        }
+    }
+
+    Ok(())
+}
+
+fn handle_auth(args: AuthArgs, verbose: bool) -> Result<()> {
+    use rasn_core::security::KeyManager;
+
+    let manager = KeyManager::new();
+
+    match args.command {
+        AuthCommand::Status => {
+            if verbose {
+                eprintln!("{} Checking API key status", "›".blue());
+            }
+
+            if manager.has_api_key() {
+                let masked = manager
+                    .get_masked_key()
+                    .unwrap_or_else(|_| "****".to_string());
+                println!("{}", "✓ API key configured".green());
+                println!("  Key: {}", masked);
+            } else {
+                println!("{}", "✗ No API key configured".yellow());
+                println!("  Set RASN_API_KEY environment variable");
+            }
+        }
+        AuthCommand::Info => {
+            println!("{}", "API Key Configuration".bold().cyan());
+            println!("{}", "─".repeat(50).dimmed());
+            println!("  Environment variable: RASN_API_KEY");
+            println!("  Usage: export RASN_API_KEY=your_key_here");
+            println!();
+            println!("  Status: rasn auth status");
         }
     }
 
