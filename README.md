@@ -18,13 +18,24 @@ High-performance ASN lookup system with SIMD acceleration, multi-level caching, 
 
 ## Installation
 
+### Quick Install (with data)
+
 ```bash
 git clone https://github.com/copyleftdev/rasn.git
 cd rasn
+./install.sh
+# or: make install
+```
+
+### Binary only
+
+```bash
 cargo install --path crates/rasn-cli
 ```
 
-Or using Docker:
+**Note**: Binary-only install requires manual data setup. See [INSTALL.md](INSTALL.md) for details.
+
+### Docker (data included)
 
 ```bash
 docker pull ghcr.io/copyleftdev/rasn:latest
