@@ -10,14 +10,14 @@
 //!
 //! ```no_run
 //! use rasn_client::ApiClient;
-//! use std::net::Ipv4Addr;
 //!
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let client = ApiClient::new("your-api-key".to_string());
-//!     let info = client.lookup_ip("8.8.8.8").await?;
-//!     println!("ASN: {}", info.asn);
-//!     Ok(())
-//! }
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let client = ApiClient::new("your-api-key".to_string());
+//! let info = client.lookup_ip("8.8.8.8").await?;
+//! println!("ASN: {}", info.asn);
+//! # Ok(())
+//! # }
 //! ```
 
 use governor::{Quota, RateLimiter};
@@ -81,7 +81,14 @@ pub struct ApiClient {
     base_url: String,
     _timeout: Duration,
     max_retries: u32,
-    rate_limiter: Arc<RateLimiter<governor::state::direct::NotKeyed, governor::state::InMemoryState, governor::clock::DefaultClock, governor::middleware::NoOpMiddleware>>,
+    rate_limiter: Arc<
+        RateLimiter<
+            governor::state::direct::NotKeyed,
+            governor::state::InMemoryState,
+            governor::clock::DefaultClock,
+            governor::middleware::NoOpMiddleware,
+        >,
+    >,
 }
 
 impl ApiClient {
