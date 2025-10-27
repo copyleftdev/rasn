@@ -17,6 +17,7 @@ rasn-core = { path = "../rasn-core" }
 rasn-arrow = { path = "../rasn-arrow" }
 rasn-resolver = { path = "../rasn-resolver" }
 rasn-client = { path = "../rasn-client" }
+rasn-mcp = { path = "../rasn-mcp" }
 clap = { version = "4.5", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true

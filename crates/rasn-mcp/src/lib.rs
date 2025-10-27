@@ -33,6 +33,8 @@
 //! # }
 //! ```
 
+pub mod transport;
+
 use rasn_arrow::IpRangeTableV4;
 use rasn_cache::CacheLayer;
 use rasn_cidr::Cidr;
