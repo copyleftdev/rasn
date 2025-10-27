@@ -7,7 +7,7 @@ High-performance ASN lookup system with SIMD acceleration, multi-level caching, 
 
 ## Features
 
-- **SIMD Acceleration** - Sub-microsecond lookups with AVX2
+- **SIMD Acceleration** - Fast IP lookups with AVX2 optimization
 - **Apache Arrow/Parquet** - Columnar storage for IP ranges
 - **Multi-Level Cache** - LRU + RocksDB cold storage
 - **MCP Server** - JSON-RPC 2.0 API for AI agents
@@ -49,10 +49,13 @@ cargo install --path crates/rasn-cli
 
 **Note**: Binary-only install requires manual data setup. See [INSTALL.md](INSTALL.md) for details.
 
-### Docker (data included)
+### Docker
+
+Build locally:
 
 ```bash
-docker pull ghcr.io/copyleftdev/rasn:latest
+docker build -t rasn:latest .
+docker-compose up -d
 ```
 
 ## Usage
@@ -100,21 +103,18 @@ Add to Claude Desktop config (`~/Library/Application Support/Claude/claude_deskt
 ### Docker
 
 ```bash
-# CLI
-docker run --rm ghcr.io/copyleftdev/rasn:latest lookup 8.8.8.8
+# Build image
+docker build -t rasn:latest .
+
+# CLI usage
+docker run --rm rasn:latest lookup 8.8.8.8
 
 # MCP Server
-docker run --rm -it ghcr.io/copyleftdev/rasn:latest mcp stdio
+docker run --rm -it rasn:latest mcp stdio
+
+# Docker Compose
+docker-compose up -d
 ```
-
-## Performance
-
-| Operation | Latency |
-|-----------|---------|
-| Arrow lookup | <100ns |
-| Cache hit | <100ns |
-| CIDR /24 | <10ms |
-| WHOIS query | <500ms |
 
 ## Configuration
 
