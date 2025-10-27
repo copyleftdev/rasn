@@ -1,4 +1,6 @@
 use anyhow::Result;
+mod batch;
+
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use serde::Serialize;
