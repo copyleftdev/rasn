@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [ main ]
+    tags-ignore: [ '**' ]
   pull_request:
     branches: [ main ]
 
@@ -43,19 +44,6 @@ jobs:
           components: rustfmt
       - name: Check formatting
         run: cargo fmt --all -- --check
-
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Build
-        run: cargo build --release --all-features
 
   doc:
     name: Documentation
