@@ -120,20 +120,6 @@ fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Resul
     Ok(())
 }
 
-fn handle_bulk(args: BulkArgs, _format: OutputFormat, verbose: bool) -> Result<()> {
-    if verbose {
-        eprintln!("{} Bulk processing from: {}", "›".blue(), args.input);
-        if let Some(ref output) = args.output {
-            eprintln!("{} Writing to: {}", "›".blue(), output);
-        } else {
-            eprintln!("{} Writing to stdout", "›".blue());
-        }
-    }
-
-    println!("{}", "Bulk processing - Coming soon! (Phase 3.1)".yellow());
-    Ok(())
-}
-
 fn handle_batch(args: BatchArgs, _format: OutputFormat, verbose: bool) -> Result<()> {
     if verbose {
         eprintln!(
