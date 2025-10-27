@@ -14,8 +14,7 @@ fn test_load_real_parquet_file() {
         .expect("Failed to load real Parquet file");
 
     // Verify it loaded data
-    assert!(table.len() > 0, "Table should have data");
-    assert!(!table.is_empty());
+    assert!(!table.is_empty(), "Table should have data");
     
     println!("✓ Loaded {} IP ranges", table.len());
 }

@@ -137,7 +137,7 @@ impl IpRangeTableV4 {
 
     /// Find ASN information for an IPv4 address
     ///
-    /// Uses binary search over sorted IP ranges.
+    /// Automatically uses SIMD (AVX2) if available, otherwise falls back to scalar binary search.
     /// Time complexity: O(log n)
     ///
     /// # Arguments
@@ -157,6 +157,20 @@ impl IpRangeTableV4 {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn find_ip(&self, ip: u32) -> Option<AsnInfo> {
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") {
+                // SAFETY: We've checked AVX2 is available
+                return unsafe { self.find_ip_simd(ip) };
+            }
+        }
+        
+        self.find_ip_scalar(ip)
+    }
+
+    /// Find IP using scalar binary search (fallback)
+    #[inline]
+    pub fn find_ip_scalar(&self, ip: u32) -> Option<AsnInfo> {
         let idx = self.binary_search(ip)?;
         
         Some(AsnInfo {
@@ -167,19 +181,88 @@ impl IpRangeTableV4 {
         })
     }
 
+    /// Find IP using SIMD AVX2 (x86_64 only)
+    #[cfg(target_arch = "x86_64")]
+    #[target_feature(enable = "avx2")]
+    unsafe fn find_ip_simd(&self, ip: u32) -> Option<AsnInfo> {
+        #[cfg(target_arch = "x86_64")]
+        use std::arch::x86_64::*;
+
+        let search_ip = _mm256_set1_epi32(ip as i32);
+        
+        // Process 8 ranges at a time
+        let chunks = self.len / 8;
+        for i in 0..chunks {
+            let base = i * 8;
+            
+            // Load 8 start IPs and 8 end IPs
+            let starts = _mm256_loadu_si256(
+                self.start_ips.values().as_ptr().add(base) as *const __m256i
+            );
+            let ends = _mm256_loadu_si256(
+                self.end_ips.values().as_ptr().add(base) as *const __m256i
+            );
+
+            // Compare: ip >= start
+            let ge_start = _mm256_cmpgt_epi32(
+                _mm256_or_si256(search_ip, _mm256_cmpeq_epi32(search_ip, starts)),
+                starts
+            );
+            
+            // Compare: ip <= end
+            let le_end = _mm256_cmpgt_epi32(
+                _mm256_or_si256(ends, _mm256_cmpeq_epi32(search_ip, ends)),
+                search_ip
+            );
+
+            // Both conditions must be true
+            let in_range = _mm256_and_si256(ge_start, le_end);
+            
+            // Check if any lane matched
+            let mask = _mm256_movemask_epi8(in_range);
+            if mask != 0 {
+                // Find which lane matched (each i32 is 4 bytes)
+                let lane = (mask.trailing_zeros() / 4) as usize;
+                let idx = base + lane;
+                
+                return Some(AsnInfo {
+                    asn: Asn(self.asns.value(idx)),
+                    organization: self.orgs.get(idx)?.clone(),
+                    country: Some(self.countries.get(idx)?.clone()),
+                    description: None,
+                });
+            }
+        }
+
+        // Handle remainder with scalar search
+        self.binary_search_range(ip, chunks * 8, self.len).map(|idx| {
+            AsnInfo {
+                asn: Asn(self.asns.value(idx)),
+                organization: self.orgs.get(idx).unwrap().clone(),
+                country: Some(self.countries.get(idx).unwrap().clone()),
+                description: None,
+            }
+        })
+    }
+
     /// Binary search for IP in sorted ranges
     fn binary_search(&self, ip: u32) -> Option<usize> {
-        let mut left = 0;
-        let mut right = self.len;
+        self.binary_search_range(ip, 0, self.len)
+    }
+
+    /// Binary search within a specific range
+    fn binary_search_range(&self, ip: u32, start: usize, end: usize) -> Option<usize> {
+        let mut left = start;
+        let mut right = end;
 
         while left < right {
             let mid = left + (right - left) / 2;
-            let start = self.start_ips.value(mid);
-            let end = self.end_ips.value(mid);
+            let range_start = self.start_ips.value(mid);
+            let range_end = self.end_ips.value(mid);
 
-            if ip < start {
+            if ip < range_start {
                 right = mid;
-            } else if ip > end {
+            } else if ip > range_end {
                 left = mid + 1;
             } else {
                 return Some(mid);  // Found!
