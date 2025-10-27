@@ -1,0 +1,36 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Build artifacts
+target/
+**/target/
+
+# Documentation
+docs/
+*.md
+LICENSE
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.log
+
+# Testing
+tests/
+**/tests/
+
+# CI/CD
+.github/
+scripts/
+
+# Data files (add separately)
+data/
+*.parquet
+*.csv
