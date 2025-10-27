@@ -9,6 +9,7 @@ members = [
     "crates/rasn-cidr",
     "crates/rasn-mcp",
     "crates/rasn-whois",
+    "crates/rasn-geoip",
     "crates/rasn-cli",
 ]
 
