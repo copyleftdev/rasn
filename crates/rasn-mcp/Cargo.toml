@@ -12,6 +12,8 @@ description = "Model Context Protocol JSON-RPC 2.0 server"
 rasn-core = { path = "../rasn-core" }
 rasn-arrow = { path = "../rasn-arrow" }
 rasn-cache = { path = "../rasn-cache" }
+rasn-cidr = { path = "../rasn-cidr" }
+rasn-resolver = { path = "../rasn-resolver" }
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

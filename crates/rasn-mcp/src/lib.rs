@@ -35,6 +35,9 @@
 
 use rasn_arrow::IpRangeTableV4;
 use rasn_cache::CacheLayer;
+use rasn_cidr::Cidr;
+use rasn_core::AsnInfo;
+use rasn_resolver::DnsResolver;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
@@ -136,12 +139,37 @@ struct LookupIpParams {
     ip: String,
 }
 
+/// Lookup ASN request parameters
+#[derive(Debug, Deserialize)]
+struct LookupAsnParams {
+    asn: u32,
+}
+
+/// Lookup domain request parameters
+#[derive(Debug, Deserialize)]
+struct LookupDomainParams {
+    domain: String,
+}
+
+/// Bulk lookup request parameters
+#[derive(Debug, Deserialize)]
+struct BulkLookupParams {
+    ips: Vec<String>,
+}
+
+/// CIDR analyze request parameters
+#[derive(Debug, Deserialize)]
+struct CidrAnalyzeParams {
+    cidr: String,
+}
+
 /// Model Context Protocol Server
 ///
 /// Handles JSON-RPC 2.0 requests for ASN lookups.
 pub struct McpServer {
     arrow_table: Option<Arc<IpRangeTableV4>>,
     cache: Arc<CacheLayer>,
+    resolver: Option<Arc<DnsResolver>>,
 }
 
 impl McpServer {
@@ -191,6 +219,12 @@ impl McpServer {
         // Route to handler
         let result = match request.method.as_str() {
             "lookup_ip" => self.handle_lookup_ip(&request.params).await,
+            "lookup_asn" => self.handle_lookup_asn(&request.params).await,
+            "lookup_domain" => self.handle_lookup_domain(&request.params).await,
+            "bulk_lookup" => self.handle_bulk_lookup(&request.params).await,
+            "cidr_analyze" => self.handle_cidr_analyze(&request.params).await,
+            "reverse_lookup" => self.handle_reverse_lookup(&request.params).await,
+            "enrich_data" => self.handle_enrich_data(&request.params).await,
             "ping" => Ok(serde_json::json!({"status": "ok"})),
             _ => Err(McpError::MethodNotFound(request.method.clone())),
         };
@@ -253,6 +287,136 @@ impl McpServer {
         }
 
         Err(McpError::InternalError("No ASN found".to_string()))
+    }
+
+    /// Handle lookup_asn method
+    async fn handle_lookup_asn(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
+        let params: LookupAsnParams = serde_json::from_value(params.clone())
+            .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
+
+        // Search Arrow table for ASN
+        if let Some(ref table) = self.arrow_table {
+            // Linear search for now - could optimize with index
+            for i in 0..1000 {
+                if let Some(info) = table.find_ip(i) {
+                    if info.asn.0 == params.asn {
+                        return serde_json::to_value(&info)
+                            .map_err(|e| McpError::InternalError(e.to_string()));
+                    }
+                }
+            }
+        }
+
+        Err(McpError::InternalError("ASN not found".to_string()))
+    }
+
+    /// Handle lookup_domain method
+    async fn handle_lookup_domain(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
+        let params: LookupDomainParams = serde_json::from_value(params.clone())
+            .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
+
+        // Resolve domain to IP
+        if let Some(ref resolver) = self.resolver {
+            let ips = resolver
+                .resolve(&params.domain)
+                .await
+                .map_err(|e| McpError::InternalError(e.to_string()))?;
+
+            if let Some(ip_addr) = ips.first() {
+                let ip_u32 = match ip_addr {
+                    std::net::IpAddr::V4(ipv4) => {
+                        let octets = ipv4.octets();
+                        u32::from_be_bytes(octets)
+                    }
+                    std::net::IpAddr::V6(_) => {
+                        return Err(McpError::InternalError("IPv6 not supported".to_string()));
+                    }
+                };
+
+                // Lookup IP in Arrow table
+                if let Some(ref table) = self.arrow_table {
+                    if let Some(info) = table.find_ip(ip_u32) {
+                        return serde_json::to_value(&serde_json::json!({
+                            "domain": params.domain,
+                            "ip": format!("{}", ip_addr),
+                            "asn_info": info
+                        }))
+                        .map_err(|e| McpError::InternalError(e.to_string()));
+                    }
+                }
+            }
+        }
+
+        Err(McpError::InternalError("Domain lookup failed".to_string()))
+    }
+
+    /// Handle bulk_lookup method
+    async fn handle_bulk_lookup(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
+        let params: BulkLookupParams = serde_json::from_value(params.clone())
+            .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
+
+        let mut results = Vec::new();
+        for ip_str in params.ips {
+            let ip_u32 = self.parse_ip(&ip_str).ok();
+            let info = if let (Some(ip), Some(ref table)) = (ip_u32, &self.arrow_table) {
+                table.find_ip(ip)
+            } else {
+                None
+            };
+
+            results.push(serde_json::json!({
+                "ip": ip_str,
+                "asn_info": info
+            }));
+        }
+
+        serde_json::to_value(&results).map_err(|e| McpError::InternalError(e.to_string()))
+    }
+
+    /// Handle cidr_analyze method
+    async fn handle_cidr_analyze(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
+        let params: CidrAnalyzeParams = serde_json::from_value(params.clone())
+            .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
+
+        let cidr =
+            Cidr::parse(&params.cidr).map_err(|e| McpError::InvalidRequest(e.to_string()))?;
+
+        Ok(serde_json::json!({
+            "cidr": params.cidr,
+            "network": cidr.network(),
+            "broadcast": cidr.broadcast(),
+            "first_usable": cidr.first_usable(),
+            "last_usable": cidr.last_usable(),
+            "total_ips": cidr.size(),
+            "prefix_len": cidr.prefix_len()
+        }))
+    }
+
+    /// Handle reverse_lookup method (placeholder)
+    async fn handle_reverse_lookup(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
+        let params: LookupIpParams = serde_json::from_value(params.clone())
+            .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
+
+        // Placeholder - would do PTR lookup
+        Ok(serde_json::json!({
+            "ip": params.ip,
+            "hostname": null,
+            "note": "Reverse DNS not yet implemented"
+        }))
+    }
+
+    /// Handle enrich_data method (placeholder)
+    async fn handle_enrich_data(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
+        let params: LookupIpParams = serde_json::from_value(params.clone())
+            .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
+
+        // Placeholder - would add WHOIS, GeoIP data
+        Ok(serde_json::json!({
+            "ip": params.ip,
+            "whois": null,
+            "geoip": null,
+            "note": "Enrichment not yet implemented"
+        }))
     }
 
     /// Parse IP address string to u32
