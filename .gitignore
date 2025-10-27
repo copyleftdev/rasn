@@ -12,7 +12,12 @@ Cargo.lock
 *~
 .DS_Store
 
-# Reference Data (large files - download separately)
+# Data files (downloaded, not in git)
+.rasn-data/
+data/cache/
+data/rocks/
+
+# Reference data (downloaded separately)
 reference_data/*.tsv
 reference_data/*.csv
 reference_data/*.gz
@@ -20,7 +25,8 @@ reference_data/*.mmdb
 
 # Generated Databases (build locally)
 data/arrow/*.parquet
-data/rocks/
+reference_data/*.tsv
+reference_data/*.csv
 data/cache/
 
 # Python

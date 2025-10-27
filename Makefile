@@ -35,19 +35,17 @@ install-bin: build
 	@echo "✓ Binary installed to $(BINDIR)/rasn"
 
 # Install data files
-install-data:
+install-data: data
 	@echo "Installing data files to $(DATADIR)..."
 	@mkdir -p $(DATADIR)
-	@if [ -d "data" ]; then \
-		cp -r data/* $(DATADIR)/ 2>/dev/null || true; \
+	@if [ -d ".rasn-data" ]; then \
+		cp -r .rasn-data/* $(DATADIR)/ 2>/dev/null || true; \
 		echo "✓ Data files installed to $(DATADIR)"; \
-	else \
-		echo "⚠ No data directory found - run 'make data' first"; \
 	fi
-	@if [ -d "reference_data" ]; then \
-		mkdir -p $(DATADIR)/reference; \
-		cp -r reference_data/* $(DATADIR)/reference/ 2>/dev/null || true; \
-		echo "✓ Reference data installed"; \
+	@if [ -d "data/arrow" ]; then \
+		mkdir -p $(DATADIR)/arrow; \
+		cp -r data/arrow/* $(DATADIR)/arrow/ 2>/dev/null || true; \
+		echo "✓ Arrow/Parquet files installed"; \
 	fi
 
 # Full installation
@@ -73,14 +71,19 @@ uninstall:
 # Download/prepare data files
 data:
 	@echo "Downloading ASN data..."
-	@mkdir -p data
-	@echo "Downloading IP2ASN database..."
-	@curl -L https://iptoasn.com/data/ip2asn-v4.tsv.gz -o data/ip2asn-v4.tsv.gz 2>/dev/null || \
-		echo "⚠ Failed to download - you may need to download manually"
-	@if [ -f data/ip2asn-v4.tsv.gz ]; then \
-		gunzip -f data/ip2asn-v4.tsv.gz; \
-		echo "✓ Data downloaded and extracted"; \
-	fi
+	@mkdir -p .rasn-data
+	@echo "→ Downloading IP2ASN v4 database..."
+	@curl -L https://iptoasn.com/data/ip2asn-v4.tsv.gz -o .rasn-data/ip2asn-v4.tsv.gz 2>/dev/null && \
+		gunzip -f .rasn-data/ip2asn-v4.tsv.gz && \
+		echo "✓ IPv4 data downloaded" || \
+		echo "⚠ Failed to download IPv4 data"
+	@echo "→ Downloading IP2ASN v6 database..."
+	@curl -L https://iptoasn.com/data/ip2asn-v6.tsv.gz -o .rasn-data/ip2asn-v6.tsv.gz 2>/dev/null && \
+		gunzip -f .rasn-data/ip2asn-v6.tsv.gz && \
+		echo "✓ IPv6 data downloaded" || \
+		echo "⚠ Failed to download IPv6 data"
+	@echo ""
+	@echo "✓ Data ready in .rasn-data/"
 	@echo ""
 	@echo "Note: For GeoIP data, download MaxMind GeoLite2 separately:"
 	@echo "  https://dev.maxmind.com/geoip/geoip2/geolite2/"

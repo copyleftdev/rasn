@@ -136,7 +136,7 @@ fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Resul
             env::var("HOME").unwrap_or_default()
         ))),
         Some(PathBuf::from("/usr/local/share/rasn")),
-        Some(PathBuf::from("reference_data")),
+        Some(PathBuf::from(".rasn-data")),
         Some(PathBuf::from("data")),
     ];
 
