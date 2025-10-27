@@ -1,0 +1,48 @@
+[workspace]
+members = [
+    "crates/rasn-cli",
+    "crates/rasn-core",
+    "crates/rasn-client",
+    "crates/rasn-resolver",
+    "crates/rasn-cidr",
+    "crates/rasn-arrow",
+    "crates/rasn-db",
+    "crates/rasn-cache",
+    "crates/rasn-mcp",
+]
+
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["RASN Contributors"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/copyleftdev/rasn"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.bench]
+inherits = "release"
