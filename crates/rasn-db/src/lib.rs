@@ -195,7 +195,7 @@ impl ColdStorage {
 
         // Use iterator to find range containing IP
         let mut iter = self.db.raw_iterator_cf(&cf);
-        iter.seek_for_prev(&search_key);
+        iter.seek_for_prev(search_key);
 
         while iter.valid() {
             if let (Some(key), Some(value)) = (iter.key(), iter.value()) {
