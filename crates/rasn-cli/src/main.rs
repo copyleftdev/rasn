@@ -4,7 +4,6 @@ mod batch;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use serde::Serialize;
-use std::sync::Arc;
 
 /// High-performance ASN mapper with Apache Arrow columnar storage
 #[derive(Parser)]
