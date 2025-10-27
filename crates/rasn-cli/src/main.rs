@@ -129,9 +129,12 @@ fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Resul
     }
 
     // Try to find data file
-    let data_paths = vec![
+    let data_paths = [
         env::var("RASN_DATA_DIR").ok().map(PathBuf::from),
-        Some(PathBuf::from(format!("{}/.local/share/rasn", env::var("HOME").unwrap_or_default()))),
+        Some(PathBuf::from(format!(
+            "{}/.local/share/rasn",
+            env::var("HOME").unwrap_or_default()
+        ))),
         Some(PathBuf::from("/usr/local/share/rasn")),
         Some(PathBuf::from("reference_data")),
         Some(PathBuf::from("data")),
@@ -139,12 +142,35 @@ fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Resul
 
     let mut table = None;
     for path in data_paths.iter().flatten() {
-        let parquet_path = path.join("asn.parquet");
-        if parquet_path.exists() {
-            if verbose {
-                eprintln!("{} Loading data from: {:?}", "›".blue(), parquet_path);
+        // Try Parquet files (in arrow subdirectory)
+        let parquet_paths = [
+            path.join("arrow/ip2asn-v4.parquet"),
+            path.join("asn.parquet"),
+        ];
+
+        for parquet_path in &parquet_paths {
+            if parquet_path.exists() {
+                if verbose {
+                    eprintln!("{} Loading data from: {:?}", "›".blue(), parquet_path);
+                }
+                table = IpRangeTableV4::from_parquet(parquet_path).ok();
+                if table.is_some() {
+                    break;
+                }
             }
-            table = IpRangeTableV4::from_parquet(&parquet_path).ok();
+        }
+
+        if table.is_some() {
+            break;
+        }
+
+        // Fallback to TSV file
+        let tsv_path = path.join("ip2asn-v4.tsv");
+        if tsv_path.exists() {
+            if verbose {
+                eprintln!("{} Loading data from TSV: {:?}", "›".blue(), tsv_path);
+            }
+            table = load_tsv_data(&tsv_path).ok();
             if table.is_some() {
                 break;
             }
@@ -161,7 +187,7 @@ fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Resul
                 target: args.target.clone(),
                 asn: Some(info.asn.0),
                 organization: Some(info.organization),
-                country: Some(info.country),
+                country: info.country, // Already Option<String>
                 description: Some(format!("AS{}", info.asn.0)),
             }
         } else {
@@ -199,11 +225,51 @@ fn parse_ip(ip_str: &str) -> Result<u32> {
 
     let octets: Result<Vec<u8>> = parts
         .iter()
-        .map(|s| s.parse::<u8>().map_err(|e| anyhow::anyhow!("Invalid octet: {}", e)))
+        .map(|s| {
+            s.parse::<u8>()
+                .map_err(|e| anyhow::anyhow!("Invalid octet: {}", e))
+        })
         .collect();
 
     let octets = octets?;
-    Ok(u32::from_be_bytes([octets[0], octets[1], octets[2], octets[3]]))
+    Ok(u32::from_be_bytes([
+        octets[0], octets[1], octets[2], octets[3],
+    ]))
+}
+
+fn load_tsv_data(path: &std::path::Path) -> Result<rasn_arrow::IpRangeTableV4> {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader};
+
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+
+    let mut start_ips = Vec::new();
+    let mut end_ips = Vec::new();
+    let mut asns = Vec::new();
+    let mut countries = Vec::new();
+    let mut orgs = Vec::new();
+
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() >= 5 {
+            if let (Ok(start), Ok(end), Ok(asn)) = (
+                parse_ip(parts[0]),
+                parse_ip(parts[1]),
+                parts[2].parse::<u32>(),
+            ) {
+                start_ips.push(start);
+                end_ips.push(end);
+                asns.push(asn);
+                countries.push(parts[3].to_string());
+                orgs.push(parts[4].to_string());
+            }
+        }
+    }
+
+    rasn_arrow::IpRangeTableV4::from_vecs(start_ips, end_ips, asns, countries, orgs)
+        .map_err(|e| anyhow::anyhow!("Failed to create Arrow table: {}", e))
 }
 
 fn handle_batch(args: BatchArgs, _format: OutputFormat, verbose: bool) -> Result<()> {

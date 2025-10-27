@@ -76,6 +76,28 @@ pub struct IpRangeTableV4 {
 }
 
 impl IpRangeTableV4 {
+    /// Create IPv4 range table from vectors
+    pub fn from_vecs(
+        start_ips: Vec<u32>,
+        end_ips: Vec<u32>,
+        asns: Vec<u32>,
+        countries: Vec<String>,
+        orgs: Vec<String>,
+    ) -> Result<Self> {
+        let len = start_ips.len();
+
+        use arrow::array::UInt32Array;
+
+        Ok(Self {
+            start_ips: Arc::new(UInt32Array::from(start_ips)),
+            end_ips: Arc::new(UInt32Array::from(end_ips)),
+            asns: Arc::new(UInt32Array::from(asns)),
+            countries,
+            orgs,
+            len,
+        })
+    }
+
     /// Load IPv4 range table from Parquet file
     ///
     /// # Examples
