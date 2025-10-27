@@ -1,14 +1,15 @@
 [workspace]
 members = [
-    "crates/rasn-cli",
     "crates/rasn-core",
-    "crates/rasn-client",
-    "crates/rasn-resolver",
-    "crates/rasn-cidr",
     "crates/rasn-arrow",
     "crates/rasn-db",
+    "crates/rasn-resolver",
+    "crates/rasn-client",
     "crates/rasn-cache",
+    "crates/rasn-cidr",
     "crates/rasn-mcp",
+    "crates/rasn-whois",
+    "crates/rasn-cli",
 ]
 
 resolver = "2"

@@ -14,7 +14,7 @@
 //! # Examples
 //!
 //! ```
-//! use rasn_mcp::{McpServer, McpRequest};
+//! use rasn_mcp::McpServer;
 //! use std::path::Path;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,7 +33,6 @@
 //! # }
 //! ```
 
-use async_trait::async_trait;
 use rasn_arrow::IpRangeTableV4;
 use rasn_cache::CacheLayer;
 use rasn_core::AsnInfo;
@@ -136,12 +135,6 @@ impl JsonRpcError {
 #[derive(Debug, Deserialize)]
 struct LookupIpParams {
     ip: String,
-}
-
-/// MCP request trait for handling different request types
-#[async_trait]
-pub trait McpRequest {
-    async fn handle(&self, server: &McpServer) -> Result<serde_json::Value>;
 }
 
 /// Model Context Protocol Server
