@@ -1,0 +1,17 @@
+# Python dependencies for RASN scripts
+
+# Data analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Rich terminal output (optional but recommended)
+rich>=13.0.0
+
+# MaxMind DB support (optional)
+maxminddb>=2.0.0
+
+# Performance
+pyarrow>=12.0.0  # Fast CSV reading
+
+# Future: RocksDB import script
+# rocksdict>=0.3.0

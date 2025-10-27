@@ -1,0 +1,21 @@
+# Generated reports
+recon_report.json
+recon_report.md
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+asnmap/
+scripts/
+reference_data/
+
+
+docs/

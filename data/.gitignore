@@ -1,0 +1,19 @@
+# Ignore all generated database files
+*.parquet
+*.db
+*.sst
+*.log
+
+# RocksDB files
+rocks/
+
+# Cache directory
+cache/
+
+# Keep the Arrow directory structure but not the files
+arrow/
+!arrow/.gitkeep
+
+# Keep documentation
+!README.md
+!.gitignore

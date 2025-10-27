@@ -1,0 +1,10 @@
+# Ignore all data files (large binary files)
+*.tsv
+*.csv
+*.mmdb
+*.gz
+
+# Keep documentation and scripts
+!README.md
+!update.sh
+!.gitignore

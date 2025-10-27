@@ -1,0 +1,70 @@
+# Rust / Cargo
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Reference Data (large files - download separately)
+reference_data/*.tsv
+reference_data/*.csv
+reference_data/*.gz
+reference_data/*.mmdb
+
+# Generated Databases (build locally)
+data/arrow/*.parquet
+data/rocks/
+data/cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Generated Reports
+scripts/recon_report.json
+scripts/recon_report.md
+
+# Logs
+*.log
+
+# API Keys & Secrets
+.env
+.env.local
+*.key
+secrets/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.tmp
+*.swp
+
+# Test coverage
+*.profraw
+*.profdata
+
+# Documentation builds
+docs/_build/
+site/
+
+# External projects (don't include original Go implementation)
+asnmap/
