@@ -1,6 +1,6 @@
 # Rust / Cargo
 target/
-Cargo.lock
+# Cargo.lock - committed for binary projects
 **/*.rs.bk
 *.pdb
 
