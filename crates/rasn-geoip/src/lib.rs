@@ -131,6 +131,17 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_is_loaded() {
+        let client = GeoIpClient::new();
+        // Without DB path, should return false
+        assert!(!client.is_loaded());
+        
+        // With DB path, would return true
+        let client_with_db = GeoIpClient::with_database("/path/to/db.mmdb".to_string());
+        assert!(client_with_db.is_loaded());
+    }
+
+    #[test]
     fn test_client_creation() {
         let client = GeoIpClient::new();
         assert!(client.is_loaded());
