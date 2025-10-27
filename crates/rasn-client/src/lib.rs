@@ -12,7 +12,6 @@
 //! use rasn_client::ApiClient;
 //! use std::net::Ipv4Addr;
 //!
-//! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     let client = ApiClient::new("your-api-key".to_string());
 //!     let info = client.lookup_ip("8.8.8.8").await?;
@@ -21,9 +20,12 @@
 //! }
 //! ```
 
+use governor::{Quota, RateLimiter};
 use rasn_core::{Asn, AsnInfo};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::num::NonZeroU32;
+use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
 
@@ -79,6 +81,7 @@ pub struct ApiClient {
     base_url: String,
     _timeout: Duration,
     max_retries: u32,
+    rate_limiter: Arc<RateLimiter<governor::state::direct::NotKeyed, governor::state::InMemoryState, governor::clock::DefaultClock, governor::middleware::NoOpMiddleware>>,
 }
 
 impl ApiClient {
@@ -102,12 +105,17 @@ impl ApiClient {
             .build()
             .unwrap();
 
+        // Rate limiter: 100 requests per second (burst)
+        let quota = Quota::per_second(NonZeroU32::new(100).unwrap());
+        let rate_limiter = Arc::new(RateLimiter::direct(quota));
+
         Self {
             client,
             api_key,
             base_url: "https://api.example.com".to_string(), // Placeholder
             _timeout: Duration::from_secs(10),
             max_retries: 3,
+            rate_limiter,
         }
     }
 
@@ -119,12 +127,17 @@ impl ApiClient {
             .build()
             .unwrap();
 
+        // Rate limiter: 100 requests per second (burst)
+        let quota = Quota::per_second(NonZeroU32::new(100).unwrap());
+        let rate_limiter = Arc::new(RateLimiter::direct(quota));
+
         Self {
             client,
             api_key,
             base_url,
             _timeout: timeout,
             max_retries: 3,
+            rate_limiter,
         }
     }
 
@@ -146,6 +159,9 @@ impl ApiClient {
     /// # }
     /// ```
     pub async fn lookup_ip(&self, ip: &str) -> Result<AsnInfo> {
+        // Wait for rate limiter
+        self.rate_limiter.until_ready().await;
+
         let url = format!("{}/asn/{}", self.base_url, ip);
 
         let mut retries = 0;
