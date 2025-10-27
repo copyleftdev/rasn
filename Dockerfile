@@ -2,7 +2,7 @@
 # Optimized for production with minimal image size
 
 # Build stage
-FROM rust:1.75-alpine AS builder
+FROM rust:1.90-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache musl-dev
