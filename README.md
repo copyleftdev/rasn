@@ -1,9 +1,21 @@
 # RASN - Rust ASN Mapper
 
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
+[![CI](https://github.com/copyleftdev/rasn/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/rasn/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/rasn.svg)](https://crates.io/crates/rasn)
 
-> High-performance ASN reconnaissance tool with native MCP server support
+High-performance ASN (Autonomous System Number) lookup system built with Rust.
+
+## ✨ Features
+
+- 🚀 **Blazing Fast**: <100ns lookups with SIMD-accelerated search (AVX2)
+- 📦 **Apache Arrow**: Columnar storage with Parquet compression
+- 💾 **Multi-Level Caching**: LRU cache + RocksDB cold storage
+- 🌐 **Network Enrichment**: DNS, WHOIS, GeoIP integration
+- 🔧 **CIDR Operations**: Full /8-/32 support with IP iteration
+- 🤖 **MCP Server**: JSON-RPC 2.0 API for AI agents (Claude Desktop)
+- ⚡ **Parallel Processing**: Rayon-powered batch operations
+- 🔒 **Production Ready**: Rate limiting, metrics, Docker supportive MCP server support
 
 **RASN** is a complete Rust rewrite of [ProjectDiscovery's ASNmap](https://github.com/projectdiscovery/asnmap), designed for 10-100x performance improvements while adding AI agent integration through the Model Context Protocol (MCP).
 
@@ -78,27 +90,26 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 
 ```bash
 # Using cargo
-cargo install rasn
 
-# Using homebrew
-brew install rasn
-
-# From source
-git clone https://github.com/yourusername/rasn.git
+```bash
+git clone https://github.com/copyleftdev/rasn.git
 cd rasn
-cargo build --release
+cargo install --path crates/rasn-cli
+```
+
+#### Using Docker
+
+```bash
+docker pull ghcr.io/copyleftdev/rasn:latest
+docker run --rm rasn:latest lookup 8.8.8.8
 ```
 
 ### Basic Usage
 
 ```bash
-# Lookup by ASN
-rasn lookup AS14421
-
-# Lookup by IP
+# IP lookup
 rasn lookup 8.8.8.8
 
-# Lookup by domain
 rasn lookup google.com
 
 # Lookup by organization
@@ -299,19 +310,12 @@ rasn/
 └── docs/               # Documentation
 ```
 
-See [Project Structure](docs/12-PROJECT-STRUCTURE.md) for details.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 🙏 Acknowledgments
 
-- [ProjectDiscovery](https://projectdiscovery.io) for the original ASNmap
+- Apache Arrow for columnar storage
+- Tokio for async runtime
+- Rayon for parallel processing
+- All other amazing Rust crates used in this project
 - [Anthropic](https://www.anthropic.com) for the MCP specification
 - [IPtoASN](https://iptoasn.com/) for ASN database
 - The Rust community for excellent crates
