@@ -6,7 +6,14 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "RASN rasn-resolver crate"
+description = "DNS resolver with caching for RASN"
 
 [dependencies]
 rasn-core = { path = "../rasn-core" }
+hickory-resolver = "0.24"
+tokio.workspace = true
+thiserror.workspace = true
+lru = "0.12"
+
+[dev-dependencies]
+tokio-test = "0.4"
