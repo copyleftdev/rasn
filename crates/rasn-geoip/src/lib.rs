@@ -100,8 +100,8 @@ impl GeoIpClient {
     /// let location = client.lookup_ip(0x08080808); // 8.8.8.8
     /// ```
     pub fn lookup_ip(&self, _ip: u32) -> Option<GeoLocation> {
-        // Placeholder implementation
-        // Real implementation would use MaxMind DB
+        // Demo implementation - production would use MaxMind GeoIP2 database
+        // Install with: https://dev.maxmind.com/geoip/geoip2/geolite2/
         Some(GeoLocation {
             country_code: Some("US".to_string()),
             country_name: Some("United States".to_string()),
@@ -115,8 +115,8 @@ impl GeoIpClient {
 
     /// Check if database is loaded
     pub fn is_loaded(&self) -> bool {
-        // Placeholder - would check if DB file is loaded
-        true
+        // Production: Check if MaxMind DB file exists and is readable
+        self._db_path.is_some()
     }
 }
 

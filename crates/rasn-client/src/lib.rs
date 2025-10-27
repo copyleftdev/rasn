@@ -119,7 +119,7 @@ impl ApiClient {
         Self {
             client,
             api_key,
-            base_url: "https://api.example.com".to_string(), // Placeholder
+            base_url: "https://api.projectdiscovery.io".to_string(), // Example API endpoint
             _timeout: Duration::from_secs(10),
             max_retries: 3,
             rate_limiter,

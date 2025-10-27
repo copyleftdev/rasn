@@ -86,10 +86,15 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 
 ## 🚀 Quick Start
 
-### Installation (Coming Soon)
+### Installation
 
 ```bash
-# Using cargo
+# From source
+git clone https://github.com/copyleftdev/rasn.git
+cd rasn
+cargo install --path crates/rasn-cli
+
+# Or using cargo (once published)
 
 ```bash
 git clone https://github.com/copyleftdev/rasn.git

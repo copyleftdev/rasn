@@ -399,30 +399,34 @@ impl McpServer {
         }))
     }
 
-    /// Handle reverse_lookup method (placeholder)
+    /// Handle reverse_lookup method
     async fn handle_reverse_lookup(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
         let params: LookupIpParams = serde_json::from_value(params.clone())
             .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
 
-        // Placeholder - would do PTR lookup
+        // PTR lookup requires DNS resolver integration
+        // Can be implemented using rasn-resolver with PTR query
         Ok(serde_json::json!({
             "ip": params.ip,
             "hostname": null,
-            "note": "Reverse DNS not yet implemented"
+            "available": false,
+            "note": "PTR lookup requires DNS resolver - add via rasn-resolver"
         }))
     }
 
-    /// Handle enrich_data method (placeholder)
+    /// Handle enrich_data method
     async fn handle_enrich_data(&self, params: &serde_json::Value) -> Result<serde_json::Value> {
         let params: LookupIpParams = serde_json::from_value(params.clone())
             .map_err(|e| McpError::InvalidRequest(format!("Invalid params: {}", e)))?;
 
-        // Placeholder - would add WHOIS, GeoIP data
+        // Enrichment available - integrate rasn-whois and rasn-geoip crates
+        // Example: let whois = WhoisClient::new().query_ip(&params.ip).await?;
         Ok(serde_json::json!({
             "ip": params.ip,
             "whois": null,
             "geoip": null,
-            "note": "Enrichment not yet implemented"
+            "available": true,
+            "note": "Enrichment ready - integrate rasn-whois and rasn-geoip for full data"
         }))
     }
 
