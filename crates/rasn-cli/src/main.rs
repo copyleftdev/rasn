@@ -120,21 +120,90 @@ fn main() -> Result<()> {
 }
 
 fn handle_lookup(args: LookupArgs, format: OutputFormat, verbose: bool) -> Result<()> {
+    use rasn_arrow::IpRangeTableV4;
+    use std::env;
+    use std::path::PathBuf;
+
     if verbose {
         eprintln!("{} Looking up: {}", "›".blue(), args.target);
     }
 
-    // Demo response - in production, this would query Arrow tables or API
-    let result = LookupResult {
-        target: args.target.clone(),
-        asn: Some(15169),
-        organization: Some("Google LLC".to_string()),
-        country: Some("US".to_string()),
-        description: Some("Google".to_string()),
+    // Try to find data file
+    let data_paths = vec![
+        env::var("RASN_DATA_DIR").ok().map(PathBuf::from),
+        Some(PathBuf::from(format!("{}/.local/share/rasn", env::var("HOME").unwrap_or_default()))),
+        Some(PathBuf::from("/usr/local/share/rasn")),
+        Some(PathBuf::from("reference_data")),
+        Some(PathBuf::from("data")),
+    ];
+
+    let mut table = None;
+    for path in data_paths.iter().flatten() {
+        let parquet_path = path.join("asn.parquet");
+        if parquet_path.exists() {
+            if verbose {
+                eprintln!("{} Loading data from: {:?}", "›".blue(), parquet_path);
+            }
+            table = IpRangeTableV4::from_parquet(&parquet_path).ok();
+            if table.is_some() {
+                break;
+            }
+        }
+    }
+
+    // Parse IP address
+    let ip_u32 = parse_ip(&args.target)?;
+
+    let result = if let Some(ref table) = table {
+        // Real lookup from Arrow table
+        if let Some(info) = table.find_ip(ip_u32) {
+            LookupResult {
+                target: args.target.clone(),
+                asn: Some(info.asn.0),
+                organization: Some(info.organization),
+                country: Some(info.country),
+                description: Some(format!("AS{}", info.asn.0)),
+            }
+        } else {
+            LookupResult {
+                target: args.target.clone(),
+                asn: None,
+                organization: Some("Not Found".to_string()),
+                country: None,
+                description: Some("IP not in database".to_string()),
+            }
+        }
+    } else {
+        // Fallback to demo data if no Arrow table found
+        if verbose {
+            eprintln!("{} No data file found, using demo data", "⚠".yellow());
+        }
+        LookupResult {
+            target: args.target.clone(),
+            asn: Some(15169),
+            organization: Some("Google LLC (DEMO DATA)".to_string()),
+            country: Some("US".to_string()),
+            description: Some("Install data with: make install-data".to_string()),
+        }
     };
 
     print_result(&result, format)?;
     Ok(())
+}
+
+fn parse_ip(ip_str: &str) -> Result<u32> {
+    let parts: Vec<&str> = ip_str.split('.').collect();
+    if parts.len() != 4 {
+        return Err(anyhow::anyhow!("Invalid IP address format"));
+    }
+
+    let octets: Result<Vec<u8>> = parts
+        .iter()
+        .map(|s| s.parse::<u8>().map_err(|e| anyhow::anyhow!("Invalid octet: {}", e)))
+        .collect();
+
+    let octets = octets?;
+    Ok(u32::from_be_bytes([octets[0], octets[1], octets[2], octets[3]]))
 }
 
 fn handle_batch(args: BatchArgs, _format: OutputFormat, verbose: bool) -> Result<()> {
