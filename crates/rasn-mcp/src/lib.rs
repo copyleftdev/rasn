@@ -36,7 +36,6 @@
 use rasn_arrow::IpRangeTableV4;
 use rasn_cache::CacheLayer;
 use rasn_cidr::Cidr;
-use rasn_core::AsnInfo;
 use rasn_resolver::DnsResolver;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -342,7 +341,7 @@ impl McpServer {
                 // Lookup IP in Arrow table
                 if let Some(ref table) = self.arrow_table {
                     if let Some(info) = table.find_ip(ip_u32) {
-                        return serde_json::to_value(&serde_json::json!({
+                        return serde_json::to_value(serde_json::json!({
                             "domain": params.domain,
                             "ip": format!("{}", ip_addr),
                             "asn_info": info
