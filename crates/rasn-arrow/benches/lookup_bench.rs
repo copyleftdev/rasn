@@ -10,8 +10,7 @@ fn benchmark_lookup(c: &mut Criterion) {
         return;
     }
 
-    let table = IpRangeTableV4::from_parquet(path)
-        .expect("Failed to load test data");
+    let table = IpRangeTableV4::from_parquet(path).expect("Failed to load test data");
 
     c.bench_function("arrow_ipv4_lookup", |b| {
         b.iter(|| {

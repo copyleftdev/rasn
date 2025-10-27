@@ -104,20 +104,11 @@ impl IpRangeTableV4 {
             .ok_or_else(|| ArrowError::ParquetLoad("No record batches found".to_string()))??;
 
         // Extract columns
-        let start_ips = batch
-            .column(0)
-            .as_primitive::<UInt32Type>()
-            .clone();
-        
-        let end_ips = batch
-            .column(1)
-            .as_primitive::<UInt32Type>()
-            .clone();
-        
-        let asns = batch
-            .column(2)
-            .as_primitive::<UInt32Type>()
-            .clone();
+        let start_ips = batch.column(0).as_primitive::<UInt32Type>().clone();
+
+        let end_ips = batch.column(1).as_primitive::<UInt32Type>().clone();
+
+        let asns = batch.column(2).as_primitive::<UInt32Type>().clone();
 
         // Extract string columns (countries and orgs)
         let countries = extract_string_column(batch.column(3))?;
@@ -164,7 +155,7 @@ impl IpRangeTableV4 {
                 return unsafe { self.find_ip_simd(ip) };
             }
         }
-        
+
         self.find_ip_scalar(ip)
     }
 
@@ -172,7 +163,7 @@ impl IpRangeTableV4 {
     #[inline]
     pub fn find_ip_scalar(&self, ip: u32) -> Option<AsnInfo> {
         let idx = self.binary_search(ip)?;
-        
+
         Some(AsnInfo {
             asn: Asn(self.asns.value(idx)),
             organization: self.orgs.get(idx)?.clone(),
@@ -189,42 +180,40 @@ impl IpRangeTableV4 {
         use std::arch::x86_64::*;
 
         let search_ip = _mm256_set1_epi32(ip as i32);
-        
+
         // Process 8 ranges at a time
         let chunks = self.len / 8;
         for i in 0..chunks {
             let base = i * 8;
-            
+
             // Load 8 start IPs and 8 end IPs
-            let starts = _mm256_loadu_si256(
-                self.start_ips.values().as_ptr().add(base) as *const __m256i
-            );
-            let ends = _mm256_loadu_si256(
-                self.end_ips.values().as_ptr().add(base) as *const __m256i
-            );
+            let starts =
+                _mm256_loadu_si256(self.start_ips.values().as_ptr().add(base) as *const __m256i);
+            let ends =
+                _mm256_loadu_si256(self.end_ips.values().as_ptr().add(base) as *const __m256i);
 
             // Compare: ip >= start
             let ge_start = _mm256_cmpgt_epi32(
                 _mm256_or_si256(search_ip, _mm256_cmpeq_epi32(search_ip, starts)),
-                starts
+                starts,
             );
-            
+
             // Compare: ip <= end
             let le_end = _mm256_cmpgt_epi32(
                 _mm256_or_si256(ends, _mm256_cmpeq_epi32(search_ip, ends)),
-                search_ip
+                search_ip,
             );
 
             // Both conditions must be true
             let in_range = _mm256_and_si256(ge_start, le_end);
-            
+
             // Check if any lane matched
             let mask = _mm256_movemask_epi8(in_range);
             if mask != 0 {
                 // Find which lane matched (each i32 is 4 bytes)
                 let lane = (mask.trailing_zeros() / 4) as usize;
                 let idx = base + lane;
-                
+
                 return Some(AsnInfo {
                     asn: Asn(self.asns.value(idx)),
                     organization: self.orgs.get(idx)?.clone(),
@@ -235,14 +224,13 @@ impl IpRangeTableV4 {
         }
 
         // Handle remainder with scalar search
-        self.binary_search_range(ip, chunks * 8, self.len).map(|idx| {
-            AsnInfo {
+        self.binary_search_range(ip, chunks * 8, self.len)
+            .map(|idx| AsnInfo {
                 asn: Asn(self.asns.value(idx)),
                 organization: self.orgs.get(idx).unwrap().clone(),
                 country: Some(self.countries.get(idx).unwrap().clone()),
                 description: None,
-            }
-        })
+            })
     }
 
     /// Binary search for IP in sorted ranges
@@ -265,7 +253,7 @@ impl IpRangeTableV4 {
             } else if ip > range_end {
                 left = mid + 1;
             } else {
-                return Some(mid);  // Found!
+                return Some(mid); // Found!
             }
         }
 
@@ -320,7 +308,7 @@ mod tests {
         let start_ips = UInt32Array::from(vec![100, 200, 300]);
         let end_ips = UInt32Array::from(vec![150, 250, 350]);
         let asns = UInt32Array::from(vec![1, 2, 3]);
-        
+
         let table = IpRangeTableV4 {
             start_ips: Arc::new(start_ips),
             end_ips: Arc::new(end_ips),
