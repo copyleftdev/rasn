@@ -6,7 +6,18 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "RASN rasn-arrow crate"
+description = "Apache Arrow/Parquet columnar storage for RASN"
 
 [dependencies]
 rasn-core = { path = "../rasn-core" }
+arrow = "53.3"
+parquet = "53.3"
+memmap2 = "0.9"
+thiserror.workspace = true
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "lookup_bench"
+harness = false
