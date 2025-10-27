@@ -17,6 +17,11 @@ use rasn_arrow::IpRangeTableV4;
 use rasn_core::AsnInfo;
 use rasn_resolver::DnsResolver;
 
+/// Number of CPU cores available
+fn num_cpus_get() -> usize {
+    num_cpus::get()
+}
+
 /// Batch processing result
 #[derive(Debug, Clone)]
 pub struct BatchResult {
@@ -39,7 +44,7 @@ impl BatchProcessor {
     /// * `arrow_path` - Optional path to Arrow/Parquet data
     /// * `num_threads` - Number of threads (default: CPU cores * 2)
     pub fn new(arrow_path: Option<&Path>, num_threads: Option<usize>) -> Result<Self> {
-        let num_threads = num_threads.unwrap_or_else(|| num_cpus::get() * 2);
+        let num_threads = num_threads.unwrap_or_else(|| num_cpus_get() * 2);
         
         let thread_pool = rayon::ThreadPoolBuilder::new()
             .num_threads(num_threads)
