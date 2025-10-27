@@ -244,6 +244,7 @@ impl ColdStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rasn_core::Asn;
     use tempfile::TempDir;
 
     fn create_temp_storage() -> (ColdStorage, TempDir) {
