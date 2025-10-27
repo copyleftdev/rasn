@@ -8,6 +8,15 @@ license.workspace = true
 repository.workspace = true
 description = "CLI for RASN"
 
+[[bin]]
+name = "rasn"
+path = "src/main.rs"
+
 [dependencies]
 rasn-core = { path = "../rasn-core" }
 anyhow.workspace = true
+clap = { version = "4.5", features = ["derive", "cargo"] }
+serde.workspace = true
+serde_json.workspace = true
+colored = "2.1"
+csv = "1.3"
