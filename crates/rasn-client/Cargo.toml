@@ -6,7 +6,15 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "RASN rasn-client crate"
+description = "HTTP client for external ASN APIs"
 
 [dependencies]
 rasn-core = { path = "../rasn-core" }
+reqwest = { version = "0.12", features = ["json"] }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tokio-test = "0.4"
